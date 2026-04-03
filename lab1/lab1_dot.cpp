@@ -163,41 +163,31 @@ void run_case(int n, int repeat, ofstream& csv_file) {
              << spd_unroll << "\n";
 }
 
-int main() {
-    // 打开 csv 文件
-    ofstream csv_file("dot_results.csv");
-    if (!csv_file.is_open()) {
-        cerr << "Failed to open dot_results.csv" << endl;
-        return 1;
+int main(int argc, char* argv[]) {
+    int n = 30000; 
+    int mode = 0;
+
+    if (argc > 1) {
+        mode = atoi(argv[1]);
+    } else {
+        cout << "Select Algorithm (1:Naive, 2:Cache, 3:Unroll): ";
+        cin >> mode;
     }
 
-    // CSV 表头
-    csv_file << "n,naive_us,cache_us,unroll_us,spd_cache,spd_unroll\n";
+    vector<int> a(n, 1);
+    vector<vector<int>> b(n, vector<int>(n, 1));
+    vector<long long> res(n);
 
-    // 终端标题
-    cout << "Matrix-Vector Dot Product Test" << endl;
-    cout << setw(8)  << "n"
-         << setw(16) << "naive(us)"
-         << setw(16) << "cache(us)"
-         << setw(16) << "unroll(us)"
-         << setw(16) << "spd_cache"
-         << setw(16) << "spd_unroll"
-         << endl;
-
-    // 测试规模
-    vector<int> sizes = {
-        10, 100,
-        128, 256, 512,
-        1000, 2048, 2800, 5000
-    };
-
-    for (int n : sizes) {
-        int repeat = choose_repeat(n);
-        run_case(n, repeat, csv_file);
+    // 由于单次计算变慢，减小重复次数，否则 VTune 运行太久
+    const int repeats = 10; 
+    
+    if (mode == 1) {
+        for(int r=0; r<repeats; r++) dot_naive(a, b, res, n);
+    } else if (mode == 2) {
+        for(int r=0; r<repeats; r++) dot_cache(a, b, res, n);
+    } else if (mode == 3) {
+        for(int r=0; r<repeats; r++) dot_unroll(a, b, res, n);
     }
 
-    csv_file.close();
-
-    cout << "\nResults have been saved to dot_results.csv" << endl;
     return 0;
 }
